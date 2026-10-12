@@ -74,7 +74,7 @@ public class Product implements Serializable {
     Integer version;
 
     @Column(name = "deleted_at")
-    LocalDateTime deletedAt; // khác null nghĩa là đã xóa mềm
+    LocalDateTime deletedAt; // khác null nghĩa là đã xóa mềmcategories
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
