@@ -29,7 +29,9 @@ public class ProductServiceImp implements ProductService {
     @Autowired
     ProductRepository productRepository;
 
-    // hỗ trợ nội bộ: trả entity để các method khác sửa/save
+    // Lấy ENTITY Product (bản gốc trong DB) theo id, đã lọc hàng xóa mềm; không thấy -> ném lỗi.
+    // Để private vì chỉ dùng NỘI BỘ service (update/softDelete/activate/deactivate cần entity để sửa rồi save).
+    // Khác với getById() công khai: getById() trả ProductResponse (DTO) cho client, không lộ entity ra ngoài.
     private Product getEntityById(Long id) {
         return productRepository.findByIdAndDeletedAtIsNull(id)
                 .orElseThrow(() -> new RuntimeException("không tìm thấy sản phẩm với id: " + id));
@@ -110,6 +112,8 @@ public class ProductServiceImp implements ProductService {
         return ProductMapper.toResponse(productRepository.save(existing));
     }
 
+    // Build câu WHERE động từ filter (ProductSpecification) rồi giao cho repo chạy kèm phân trang.
+    // .map(...) chuyển từng Product trong trang thành ProductResponse mà VẪN giữ nguyên metadata phân trang.
     @Override
     public Page<ProductResponse> search(ProductFilter filter, Pageable pageable) {
         return productRepository

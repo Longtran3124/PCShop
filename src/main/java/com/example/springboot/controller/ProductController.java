@@ -95,6 +95,12 @@ public class ProductController {
         return ResponseEntity.ok(productService.deactivate(id));
     }
 
+    // Tìm + lọc + phân trang + sắp xếp sản phẩm (dùng cho trang danh mục/khách).
+    // - filter: Spring tự gom các query param (keyword, categoryId, brandId, minPrice, maxPrice, inStock) vào object ProductFilter.
+    // - @PageableDefault: client không truyền page/size/sort thì mặc định 20 dòng/trang, sắp theo id
+    //   (đặt default để tránh client quên size -> lỡ trả cả bảng).
+    // Trả Page<ProductResponse>: vừa có danh sách (content) vừa có metadata phân trang (totalPages, totalElements...).
+    // GET http://localhost:8111/api/products/search-filter?brandId=14&minPrice=5000000&inStock=true&page=0&size=10&sort=salePrice,asc
     @GetMapping("/search-filter")
     public ResponseEntity<Page<ProductResponse>> search(
             ProductFilter filter,
