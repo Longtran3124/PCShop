@@ -1,7 +1,10 @@
 package com.example.springboot.service.imp;
 
+import com.example.springboot.dto.request.product.create.ProductCreateRequest;
+import com.example.springboot.dto.response.product.ProductResponse;
 import com.example.springboot.entity.Product;
 import com.example.springboot.enums.ProductStatus;
+import com.example.springboot.mapper.ProductMapper;
 import com.example.springboot.repository.ProductRepository;
 import com.example.springboot.service.ProductService;
 import lombok.AccessLevel;
@@ -12,7 +15,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -39,16 +41,19 @@ public class ProductServiceImp implements ProductService {
     }
 
     @Override
-    public Product create(Product product) {
-        product.setSoldCount(0); // Sản phẩm mới chưa bán cái nào
+    public ProductResponse create(ProductCreateRequest request) {
+        Product product = ProductMapper.toEntity(request); // DTO -> entity
+        // server tự quản các field hệ thống
+        product.setSlug(generateSlug(request.getName()));
+        product.setSoldCount(0);
         if (product.getStockQuantity() == null) {
             product.setStockQuantity(0);
         }
-        if (product.getStatus() == null) {
-            product.setStatus(ProductStatus.DRAFT);
-        }
-        return productRepository.save(product);
+        product.setStatus(ProductStatus.DRAFT);              // luôn DRAFT, không nhận từ client
+        Product saved = productRepository.save(product);
+        return ProductMapper.toResponse(saved);
     }
+
 
     @Override
     public Product update(Long id, Product product) {
@@ -90,5 +95,9 @@ public class ProductServiceImp implements ProductService {
         Product existing = getById(id);
         existing.setStatus(ProductStatus.INACTIVE); // chuyển từ bán sản phẩm sang ngừng bán
         return productRepository.save(existing);
+    }
+
+    private String generateSlug(String name) {
+        return name.trim().toLowerCase().replaceAll("\\s+", "-");
     }
 }

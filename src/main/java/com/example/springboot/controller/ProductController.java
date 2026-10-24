@@ -1,7 +1,10 @@
 package com.example.springboot.controller;
 
+import com.example.springboot.dto.request.product.create.ProductCreateRequest;
+import com.example.springboot.dto.response.product.ProductResponse;
 import com.example.springboot.entity.Product;
 import com.example.springboot.service.ProductService;
+import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -37,8 +40,8 @@ public class ProductController {
     // Tạo sản phẩm mới. Dữ liệu nằm trong body (JSON). Thành công trả 201 Created kèm sản phẩm vừa tạo.
     // POST http://localhost:8111/api/products
     @PostMapping
-    public ResponseEntity<Product> create(@RequestBody Product product) {
-        Product created = productService.create(product);
+    public ResponseEntity<ProductResponse> create( @Valid @RequestBody ProductCreateRequest request) {
+        ProductResponse created = productService.create(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 

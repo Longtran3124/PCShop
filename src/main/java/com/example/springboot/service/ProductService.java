@@ -1,5 +1,7 @@
 package com.example.springboot.service;
 
+import com.example.springboot.dto.request.product.create.ProductCreateRequest;
+import com.example.springboot.dto.response.product.ProductResponse;
 import com.example.springboot.entity.Product;
 
 import java.util.List;
@@ -12,7 +14,7 @@ public interface ProductService {
 
     List<Product> findByNameContaining(String keyword);
 
-    Product create(Product product);
+    ProductResponse create(ProductCreateRequest request);
 
     Product update(Long id, Product product);
 
