@@ -1,6 +1,6 @@
 # Tiến độ dự án PCShop
 
-> Cập nhật lần cuối: 2026-10-20
+> Cập nhật lần cuối: 2026-10-24
 
 Dự án web bán linh kiện/máy tính (Spring Boot + MySQL). File này ghi lại tiến độ để tiện theo dõi khi làm luân phiên giữa laptop và PC.
 
@@ -40,13 +40,15 @@ Dự án web bán linh kiện/máy tính (Spring Boot + MySQL). File này ghi l�
   - [x] `PATCH /api/products/{id}/activate` — mở bán
   - [x] `PATCH /api/products/{id}/deactivate` — ngừng bán
 - [x] Repository lọc hàng đã xóa mềm (`deletedAt IS NULL`)
+- [x] **Validation đầu vào:** `@Valid` ở create/update + `@NotBlank`/`@NotNull`/`@Min` trong các request DTO
+- [x] **Tách DTO (không lộ entity ra API):** `ProductCreateRequest`, `ProductUpdateRequest`, `ProductFilter`, `ProductResponse` + `ProductMapper`. Toàn bộ controller/service đã trả `ProductResponse`.
+- [x] **Phân trang + sắp xếp + lọc:** `GET /api/products/search-filter?page=&size=&sort=&minPrice=&maxPrice=&brandId=&categoryId=&inStock=` — `ProductSpecification` + `Pageable`, repo `extends JpaSpecificationExecutor`, trả `Page<ProductResponse>`. Đã bật `@EnableSpringDataWebSupport(VIA_DTO)`. (verify OK)
+- [x] **Dữ liệu test:** đã seed thêm 12 sản phẩm SKU `TEST-*` phủ các ca biên (INACTIVE, DRAFT, hết hàng, xóa mềm ở nhiều mốc thời gian, hàng giá rẻ). Xóa sạch bằng `DELETE FROM products WHERE sku LIKE 'TEST-%'`.
 
 ---
 
 ## 🚧 Đang làm / Dự kiến tiếp theo
 
-- [x] Validation dữ liệu đầu vào (`@Valid` ở create/update, `@NotBlank`/`@NotNull`/`@Min`)
-- [x] Dùng DTO thay vì trả thẳng Entity ra API — `ProductCreateRequest`, `ProductUpdateRequest`, `ProductResponse` + `ProductMapper`. Toàn bộ controller/service đã trả `ProductResponse`, entity không còn lộ ra ngoài.
 - [ ] **(tiếp theo)** Xử lý lỗi chuẩn (thay `RuntimeException` trong `getEntityById` bằng exception riêng + `@ControllerAdvice` trả JSON lỗi gọn, 404 khi không tìm thấy) — *để sau, dự án còn mới chưa cần*
 - [ ] Entity `Category`, `Brand`, `Series` (hiện đang map tạm bằng `categoryId`, `brandId`...)
 - [ ] Xác thực / phân quyền (Spring Security) cho các API admin
