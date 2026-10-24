@@ -107,4 +107,11 @@ public class ProductController {
             @PageableDefault(size = 20, sort = "id")Pageable pageable) {
         return ResponseEntity.ok(productService.search(filter, pageable));
     }
+
+    // Lấy chi tiết sản phẩm theo slug, đã ẩn hàng xóa mềm.
+    // GET http://localhost:8111/api/products/slug/laptop-van-phong-hp-240-g9
+    @GetMapping("/slug/{slug}")
+    public ResponseEntity<ProductResponse> getBySlug(@PathVariable String slug) {
+        return ResponseEntity.ok(productService.getBySlug(slug));
+    }
 }

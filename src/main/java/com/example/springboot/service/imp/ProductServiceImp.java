@@ -121,6 +121,13 @@ public class ProductServiceImp implements ProductService {
                 .map(ProductMapper::toResponse);
     }
 
+    @Override
+    public ProductResponse getBySlug(String slug) {
+        Product p = productRepository.findBySlugAndDeletedAtIsNull(slug)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm với slug: " + slug));
+        return ProductMapper.toResponse(p);
+    }
+
     private String generateSlug(String name) {
         return name.trim().toLowerCase().replaceAll("\\s+", "-");
     }

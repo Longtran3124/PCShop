@@ -1,6 +1,6 @@
 # Tiến độ dự án PCShop
 
-> Cập nhật lần cuối: 2026-10-24
+> Cập nhật lần cuối: 2026-10-25
 
 Dự án web bán linh kiện/máy tính (Spring Boot + MySQL). File này ghi lại tiến độ để tiện theo dõi khi làm luân phiên giữa laptop và PC.
 
@@ -61,9 +61,9 @@ Dự án web bán linh kiện/máy tính (Spring Boot + MySQL). File này ghi l�
 
 **🔴 Ưu tiên cao**
 - [x] Phân trang + sắp xếp + lọc: `GET /products/search-filter?page=&size=&sort=&minPrice=&maxPrice=&brandId=&categoryId=&inStock=` — `ProductFilter` + `ProductSpecification` + `Pageable`, repo `extends JpaSpecificationExecutor`. Trả `Page<ProductResponse>`. Đã bật `@EnableSpringDataWebSupport(VIA_DTO)` cho JSON phân trang ổn định. (verify OK: 42 sản phẩm, 5 trang)
-- [ ] `GET /products/slug/{slug}` — lấy sản phẩm theo slug (tận dụng slug đã sinh, cho URL thân thiện)
-- [ ] `POST /products/{id}/restore` — khôi phục hàng đã xóa mềm (`deletedAt = null`)
-- [ ] `GET /products/trash` — xem danh sách hàng đã xóa mềm (admin)
+- [x] `GET /products/slug/{slug}` — lấy sản phẩm theo slug (repo `findBySlugAndDeletedAtIsNull` + service `getBySlug`). Verify OK bằng PowerShell. *Lưu ý khi test Postman: coi chừng ký tự `%0A` (Enter thừa) dính vào cuối URL → 500 không tìm thấy.*
+- [ ] `POST /products/{id}/restore` — khôi phục hàng đã xóa mềm (`deletedAt = null`). ⏳ **Làm tiếp sáng 2026-10-26.** (dùng `findById` gốc, KHÔNG dùng `getEntityById` vì nó lọc mất hàng đã xóa; nhớ check `if deletedAt == null` để chặn restore hàng đang sống)
+- [ ] `GET /products/trash` — xem danh sách hàng đã xóa mềm (admin), repo `findByDeletedAtIsNotNull`. ⏳ **Làm tiếp sáng 2026-10-26.** (test với data `TEST-DEL-*`: id 66/67/68 đang trong thùng rác)
 
 **🟡 Ưu tiên vừa**
 - [ ] Gallery nhiều ảnh: `POST /products/{id}/images`, `DELETE /products/{id}/images/{imageId}` (bảng `product_images`)

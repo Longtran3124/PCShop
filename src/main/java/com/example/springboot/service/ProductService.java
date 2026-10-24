@@ -31,4 +31,6 @@ public interface ProductService {
     ProductResponse deactivate(Long id); // Ngừng bán -> status = INACTIVE
 
     Page<ProductResponse> search(ProductFilter filter, Pageable pageable);
+
+    ProductResponse getBySlug(String slug);
 }

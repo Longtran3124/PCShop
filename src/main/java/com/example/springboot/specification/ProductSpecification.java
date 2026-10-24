@@ -13,6 +13,7 @@ public class ProductSpecification {
     // Nhờ vậy 1 hàm xử lý được mọi tổ hợp lọc (chỉ giá, giá + brand, cả 4 điều kiện...) mà không phải viết nhiều method findBy.
     // root = bảng products, cb = "công cụ" tạo điều kiện, predicates = danh sách điều kiện sẽ nối bằng AND.
     public static Specification<Product> withFilter(ProductFilter f) {
+        // root = bảng products; cb = bộ công cụ tạo điều kiện
         return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
 
