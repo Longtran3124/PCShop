@@ -1,6 +1,8 @@
 package com.example.springboot.controller;
 
 import com.example.springboot.dto.request.product.create.ProductCreateRequest;
+import com.example.springboot.dto.request.product.filter.ProductFilter;
+import com.example.springboot.dto.request.product.update.ProductUpdateRequest;
 import com.example.springboot.dto.response.product.ProductResponse;
 import com.example.springboot.entity.Product;
 import com.example.springboot.service.ProductService;
@@ -8,6 +10,9 @@ import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -25,15 +30,14 @@ public class ProductController {
     // Lấy chi tiết 1 sản phẩm theo id (đã lọc hàng xóa mềm). Không thấy -> báo lỗi.
     // GET http://localhost:8111/api/products/1
     @GetMapping("/{id}")
-    public ResponseEntity<Product> getById(@PathVariable Long id) {
-        Product product = productService.getById(id);
-        return ResponseEntity.ok(product);
+    public ResponseEntity<ProductResponse> getById(@PathVariable Long id) {
+        return ResponseEntity.ok(productService.getById(id));
     }
 
     // Tìm sản phẩm theo tên (keyword nằm trên query string ?keyword=...), đã ẩn hàng xóa mềm.
     // GET http://localhost:8111/api/products/search?keyword=iphone
     @GetMapping("/search")
-    public ResponseEntity<List<Product>> findByNameContaining(@RequestParam String keyword) {
+    public ResponseEntity<List<ProductResponse>> findByNameContaining(@RequestParam String keyword) {
         return ResponseEntity.ok(productService.findByNameContaining(keyword));
     }
 
@@ -49,9 +53,10 @@ public class ProductController {
     // Chỉ sửa field client gửi lên, field bỏ trống giữ nguyên giá trị cũ.
     // PUT http://localhost:8111/api/products/1
     @PutMapping("/{id}")
-    public ResponseEntity<Product> update(@PathVariable Long id, @RequestBody Product product) {
-        Product updated = productService.update(id, product);
-        return ResponseEntity.ok(updated);
+    public ResponseEntity<ProductResponse> update(
+            @PathVariable Long id,
+            @Valid @RequestBody ProductUpdateRequest request) {
+        return ResponseEntity.ok(productService.update(id, request));
     }
 
     // Xóa mềm: đánh dấu deletedAt = now(), sản phẩm bị ẩn khỏi web nhưng dữ liệu vẫn còn trong DB.
@@ -65,28 +70,35 @@ public class ProductController {
     // Danh sách cho KHÁCH: chỉ sản phẩm còn bán (deletedAt = null).
     // GET http://localhost:8111/api/products
     @GetMapping
-    public ResponseEntity<List<Product>> getAllActive() {
+    public ResponseEntity<List<ProductResponse>> getAllActive() {
         return ResponseEntity.ok(productService.findAllActive());
     }
 
     // Danh sách cho ADMIN: xem tất cả, kể cả hàng đã xóa mềm.
     // GET http://localhost:8111/api/products/all
     @GetMapping("/all")
-    public ResponseEntity<List<Product>> getAll() {
+    public ResponseEntity<List<ProductResponse>> getAll() {
         return ResponseEntity.ok(productService.findAll());
     }
 
     // Mở bán sản phẩm: đổi status -> ACTIVE. Chỉ cần id trên URL, không cần body.
     // PATCH http://localhost:8111/api/products/1/activate
     @PatchMapping("/{id}/activate")
-    public ResponseEntity<Product> activate(@PathVariable Long id) {
+    public ResponseEntity<ProductResponse> activate(@PathVariable Long id) {
         return ResponseEntity.ok(productService.activate(id));
     }
 
     // Ngừng bán sản phẩm: đổi status -> INACTIVE (sản phẩm vẫn hiện, chỉ không cho mua).
     // PATCH http://localhost:8111/api/products/1/deactivate
     @PatchMapping("/{id}/deactivate")
-    public ResponseEntity<Product> deactivate(@PathVariable Long id) {
+    public ResponseEntity<ProductResponse> deactivate(@PathVariable Long id) {
         return ResponseEntity.ok(productService.deactivate(id));
+    }
+
+    @GetMapping("/search-filter")
+    public ResponseEntity<Page<ProductResponse>> search(
+            ProductFilter filter,
+            @PageableDefault(size = 20, sort = "id")Pageable pageable) {
+        return ResponseEntity.ok(productService.search(filter, pageable));
     }
 }

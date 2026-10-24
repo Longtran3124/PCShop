@@ -1,16 +1,21 @@
 package com.example.springboot.service.imp;
 
 import com.example.springboot.dto.request.product.create.ProductCreateRequest;
+import com.example.springboot.dto.request.product.filter.ProductFilter;
+import com.example.springboot.dto.request.product.update.ProductUpdateRequest;
 import com.example.springboot.dto.response.product.ProductResponse;
 import com.example.springboot.entity.Product;
 import com.example.springboot.enums.ProductStatus;
 import com.example.springboot.mapper.ProductMapper;
 import com.example.springboot.repository.ProductRepository;
 import com.example.springboot.service.ProductService;
+import com.example.springboot.specification.ProductSpecification;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -24,20 +29,27 @@ public class ProductServiceImp implements ProductService {
     @Autowired
     ProductRepository productRepository;
 
-    @Override
-    public Product getById(Long id) {
+    // hỗ trợ nội bộ: trả entity để các method khác sửa/save
+    private Product getEntityById(Long id) {
         return productRepository.findByIdAndDeletedAtIsNull(id)
                 .orElseThrow(() -> new RuntimeException("không tìm thấy sản phẩm với id: " + id));
     }
 
     @Override
-    public List<Product> findAll() {
-        return productRepository.findAll();
+    public ProductResponse getById(Long id) {
+        return ProductMapper.toResponse(getEntityById(id));
     }
 
     @Override
-    public List<Product> findByNameContaining(String keyword) {
-        return productRepository.findByNameContainingAndDeletedAtIsNull(keyword);
+    public List<ProductResponse> findAll() {
+        return productRepository.findAll()
+                .stream().map(ProductMapper::toResponse).toList();
+    }
+
+    @Override
+    public List<ProductResponse> findByNameContaining(String keyword) {
+        return productRepository.findByNameContainingAndDeletedAtIsNull(keyword)
+                .stream().map(ProductMapper::toResponse).toList();
     }
 
     @Override
@@ -54,47 +66,55 @@ public class ProductServiceImp implements ProductService {
         return ProductMapper.toResponse(saved);
     }
 
-
     @Override
-    public Product update(Long id, Product product) {
-        Product existing = getById(id); // sử dụng getById để kiểm tra xem sản phẩm này đã tồn tại chưa
-        // Những field Client được phép chỉnh sửa
-        if (product.getName() != null) {
-            existing.setName(product.getName());
+    public ProductResponse update(Long id, ProductUpdateRequest request) {
+        Product existing = getEntityById(id);
+        if (request.getName() != null) {
+            existing.setName(request.getName());
         }
-        if (product.getSalePrice() != null) {
-            existing.setSalePrice(product.getSalePrice());
+        if (request.getSalePrice() != null) {
+            existing.setSalePrice(request.getSalePrice());
         }
-        if (product.getStockQuantity() != null) { // client không gửi thì bỏ qua và giữ tồn kho
-            existing.setStockQuantity(product.getStockQuantity());
+        if (request.getStockQuantity() != null) {
+            existing.setStockQuantity(request.getStockQuantity());
         }
-        return productRepository.save(existing);
+        Product saved = productRepository.save(existing);
+        return ProductMapper.toResponse(saved);
     }
+
 
     @Override
     public void softDelete(Long id) {
-        Product existing = getById(id);
+        Product existing = getEntityById(id);
         existing.setDeletedAt(LocalDateTime.now()); // đánh dấu là đã xóa
         productRepository.save(existing);
     }
 
     @Override
-    public List<Product> findAllActive() {
-        return productRepository.findByDeletedAtIsNull(); // chỉ hàng tồn tại
+    public List<ProductResponse> findAllActive() {
+        return productRepository.findByDeletedAtIsNull()
+                .stream().map(ProductMapper::toResponse).toList();
     }
 
     @Override
-    public Product activate(Long id) {
-        Product existing = getById(id);
+    public ProductResponse activate(Long id) {
+        Product existing = getEntityById(id);
         existing.setStatus(ProductStatus.ACTIVE); // chuyển đổi sản phẩm từ mới nhập hàng về sang bán
-        return productRepository.save(existing);
+        return ProductMapper.toResponse(productRepository.save(existing));
     }
 
     @Override
-    public Product deactivate(Long id) {
-        Product existing = getById(id);
+    public ProductResponse deactivate(Long id) {
+        Product existing = getEntityById(id);
         existing.setStatus(ProductStatus.INACTIVE); // chuyển từ bán sản phẩm sang ngừng bán
-        return productRepository.save(existing);
+        return ProductMapper.toResponse(productRepository.save(existing));
+    }
+
+    @Override
+    public Page<ProductResponse> search(ProductFilter filter, Pageable pageable) {
+        return productRepository
+                .findAll(ProductSpecification.withFilter(filter), pageable)
+                .map(ProductMapper::toResponse);
     }
 
     private String generateSlug(String name) {

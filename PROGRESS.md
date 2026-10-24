@@ -45,19 +45,45 @@ Dự án web bán linh kiện/máy tính (Spring Boot + MySQL). File này ghi l�
 
 ## 🚧 Đang làm / Dự kiến tiếp theo
 
-- [ ] Xử lý lỗi chuẩn (thay `RuntimeException` bằng exception + `@ControllerAdvice` trả JSON lỗi gọn)
-- [ ] Validation dữ liệu đầu vào (`@Valid`, bắt buộc field, giá > 0...)
-- [ ] Dùng DTO thay vì trả thẳng Entity ra API (tách lớp request/response)
+- [x] Validation dữ liệu đầu vào (`@Valid` ở create/update, `@NotBlank`/`@NotNull`/`@Min`)
+- [x] Dùng DTO thay vì trả thẳng Entity ra API — `ProductCreateRequest`, `ProductUpdateRequest`, `ProductResponse` + `ProductMapper`. Toàn bộ controller/service đã trả `ProductResponse`, entity không còn lộ ra ngoài.
+- [ ] **(tiếp theo)** Xử lý lỗi chuẩn (thay `RuntimeException` trong `getEntityById` bằng exception riêng + `@ControllerAdvice` trả JSON lỗi gọn, 404 khi không tìm thấy) — *để sau, dự án còn mới chưa cần*
 - [ ] Entity `Category`, `Brand`, `Series` (hiện đang map tạm bằng `categoryId`, `brandId`...)
-- [ ] Phân trang + sắp xếp cho danh sách sản phẩm (`Pageable`)
 - [ ] Xác thực / phân quyền (Spring Security) cho các API admin
+
+---
+
+## 🗺️ Roadmap bổ sung API cho Product (làm theo thứ tự ưu tiên)
+
+> Hiện có 9 endpoint (CRUD + search + activate/deactivate) — mới là lõi cơ bản. Module Product thực tế thường 20–30 endpoint. Làm dần theo thứ tự dưới, xong mục nào tích mục đó.
+
+**🔴 Ưu tiên cao**
+- [x] Phân trang + sắp xếp + lọc: `GET /products/search-filter?page=&size=&sort=&minPrice=&maxPrice=&brandId=&categoryId=&inStock=` — `ProductFilter` + `ProductSpecification` + `Pageable`, repo `extends JpaSpecificationExecutor`. Trả `Page<ProductResponse>`. Đã bật `@EnableSpringDataWebSupport(VIA_DTO)` cho JSON phân trang ổn định. (verify OK: 42 sản phẩm, 5 trang)
+- [ ] `GET /products/slug/{slug}` — lấy sản phẩm theo slug (tận dụng slug đã sinh, cho URL thân thiện)
+- [ ] `POST /products/{id}/restore` — khôi phục hàng đã xóa mềm (`deletedAt = null`)
+- [ ] `GET /products/trash` — xem danh sách hàng đã xóa mềm (admin)
+
+**🟡 Ưu tiên vừa**
+- [ ] Gallery nhiều ảnh: `POST /products/{id}/images`, `DELETE /products/{id}/images/{imageId}` (bảng `product_images`)
+- [ ] Thông số kỹ thuật: `PUT /products/{id}/specifications` (CPU/RAM/VGA... — bắt buộc với shop PC)
+- [ ] Quản lý tồn kho riêng: `PATCH /products/{id}/stock`
+- [ ] Đổi giá riêng + log lịch sử giá: `PATCH /products/{id}/price`
+- [ ] `GET /products/low-stock` — cảnh báo sắp hết hàng
+
+**⚪ Ưu tiên thấp (khi hệ thống đã ổn định)**
+- [ ] Review/rating: `GET` + `POST /products/{id}/reviews`
+- [ ] Khối hiển thị trang chủ: `/featured`, `/best-sellers`, `/newest`, `/{id}/related`
+- [ ] Vận hành admin: import/export Excel, sửa/xóa hàng loạt (bulk)
+- [ ] Đếm lượt xem, wishlist, so sánh sản phẩm
 
 ---
 
 ## 📝 Ghi chú / Việc cần dọn
 
 - [ ] `Product.java` dòng 77: comment bị dính chữ thừa `đã xóa mềmcategories` → nên sửa lại thành `đã xóa mềm`
-- [ ] Trong `ProductServiceImp` có cả `@Autowired` lẫn constructor injection (`@RequiredArgsConstructor`) — nên thống nhất 1 kiểu
+- [ ] Trong `ProductServiceImp` có cả `@Autowired` lẫn constructor injection (`@RequiredArgsConstructor`) — nên bỏ `@Autowired`, dùng constructor injection
+- [ ] Xóa import thừa `entity.Product` ở `ProductService.java` và `ProductController.java` (sau khi chuyển hết sang DTO thì 2 chỗ này không còn dùng `Product`)
+- [ ] WARN `spring.jpa.open-in-view is enabled by default` khi khởi động — nên set `spring.jpa.open-in-view: false` trong `application.yaml` để tắt (tránh query DB lúc render view). Để sau, chưa ảnh hưởng.
 
 ---
 

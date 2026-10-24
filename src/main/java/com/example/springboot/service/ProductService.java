@@ -1,28 +1,34 @@
 package com.example.springboot.service;
 
 import com.example.springboot.dto.request.product.create.ProductCreateRequest;
+import com.example.springboot.dto.request.product.filter.ProductFilter;
+import com.example.springboot.dto.request.product.update.ProductUpdateRequest;
 import com.example.springboot.dto.response.product.ProductResponse;
 import com.example.springboot.entity.Product;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
 public interface ProductService {
 
-    Product getById(Long id);
+    ProductResponse getById(Long id);
 
-    List<Product> findAll();
+    List<ProductResponse> findAll();
 
-    List<Product> findByNameContaining(String keyword);
+    List<ProductResponse> findByNameContaining(String keyword);
 
     ProductResponse create(ProductCreateRequest request);
 
-    Product update(Long id, Product product);
+    ProductResponse update(Long id, ProductUpdateRequest request);
 
     void softDelete(Long id);
 
-    List<Product> findAllActive();
+    List<ProductResponse> findAllActive();
 
-    Product activate(Long id); // mở bán -> status = ACTIVE
+    ProductResponse activate(Long id); // mở bán -> status = ACTIVE
 
-    Product deactivate(Long id); // Ngừng bán -> status = INACTIVE
+    ProductResponse deactivate(Long id); // Ngừng bán -> status = INACTIVE
+
+    Page<ProductResponse> search(ProductFilter filter, Pageable pageable);
 }
