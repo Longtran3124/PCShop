@@ -1,6 +1,6 @@
 # Tiến độ dự án PCShop
 
-> Cập nhật lần cuối: 2026-10-25
+> Cập nhật lần cuối: 2026-10-26
 
 Dự án web bán linh kiện/máy tính (Spring Boot + MySQL). File này ghi lại tiến độ để tiện theo dõi khi làm luân phiên giữa laptop và PC.
 
@@ -49,9 +49,33 @@ Dự án web bán linh kiện/máy tính (Spring Boot + MySQL). File này ghi l�
 
 ## 🚧 Đang làm / Dự kiến tiếp theo
 
-- [ ] **(tiếp theo)** Xử lý lỗi chuẩn (thay `RuntimeException` trong `getEntityById` bằng exception riêng + `@ControllerAdvice` trả JSON lỗi gọn, 404 khi không tìm thấy) — *để sau, dự án còn mới chưa cần*
-- [ ] Entity `Category`, `Brand`, `Series` (hiện đang map tạm bằng `categoryId`, `brandId`...)
-- [ ] Xác thực / phân quyền (Spring Security) cho các API admin
+- [ ] **(ĐANG LÀM)** Entity `Category`, `Brand`, `Series` + CRUD (quyết định: làm "chiều rộng" các bảng cốt lõi trước, rồi quay lại hoàn thiện Product sau).
+  - Bảng `categories`, `brands`, `series` **đã có sẵn trong DB** nhưng code chưa có entity.
+  - Làm theo 4 tầng như Product: Entity → Repository → Service → Controller.
+  - [x] **Category XONG** (full CRUD + slug + trash + restore, verify OK). Khác Product: `is_active` (Boolean) thay status enum; KHÔNG có `@Version`; có `parent_id` tự trỏ (tạm map `Long parentId`). API tại `/api/categories`.
+  - [x] **Brand XONG** (full CRUD + slug + trash + restore, verify OK). Đơn giản hơn Category: chỉ `name`, `slug`, `logoUrl` + soft-delete + audit (không parent/sortOrder/isActive/version). API tại `/api/brands`.
+  - [ ] **Series**.
+  - Nâng cấp sau: đổi `categoryId`/`brandId` trong Product thành quan hệ `@ManyToOne` thật.
+
+### 🗺️ Bổ sung API cho Category (làm SAU, khi đã có quan hệ @ManyToOne Product↔Category)
+> Category có cấu trúc CÂY (parent_id) nên API đặc trưng là nhóm duyệt cây. Thứ tự ưu tiên:
+- [ ] 🔴 `GET /categories/{id}/products` — sản phẩm thuộc danh mục (kèm phân trang). Cần quan hệ Product↔Category trước cho gọn.
+- [ ] 🔴 `GET /categories/roots` (danh mục gốc, parentId=null) + `GET /categories/{id}/children` (con trực tiếp) — dựng menu.
+- [ ] 🟡 `GET /categories/tree` (cả cây lồng nhau) + `GET /categories/{id}/breadcrumb` (đường dẫn gốc→node).
+- [ ] 🟡 Ràng buộc nghiệp vụ: CHẶN xóa danh mục còn chứa sản phẩm/còn con; CHẶN vòng lặp cha-con (A→B→A).
+- [ ] ⚪ Tiện ích admin: `PATCH /{id}/move` (đổi cha), `PATCH /reorder` (sắp sortOrder), `PATCH /{id}/toggle-active`, `GET /{id}/product-count`.
+
+### 🗺️ Bổ sung API cho Brand (làm SAU, khi đã có quan hệ @ManyToOne Product↔Brand)
+> Brand "phẳng" (không cây) nên ít API đặc thù hơn Category:
+- [ ] 🔴 `GET /brands/{id}/products` — sản phẩm của 1 hãng (kèm phân trang). Cần quan hệ Product↔Brand trước.
+- [ ] 🟡 Upload logo thật: `POST /brands/{id}/logo` (upload file thay vì chỉ nhận `logoUrl` text) + `DELETE /brands/{id}/logo`. Làm chung đợt với Product gallery.
+- [ ] 🟡 `GET /brands?page=&size=&sort=` (phân trang danh sách) + `GET /brands/featured` (hãng nổi bật trang chủ) + `GET /brands/{id}/product-count`.
+- [ ] 🟡 Ràng buộc: CHẶN xóa thương hiệu còn chứa sản phẩm.
+
+### 🔔 Để sau (đã bàn, hoãn lại có chủ đích)
+- [ ] Xử lý lỗi chuẩn: thay `RuntimeException` (trong `getEntityById`, `getBySlug`, `restore`...) bằng exception riêng + `@ControllerAdvice` trả JSON lỗi gọn, **404** khi không tìm thấy thay vì 500. *Nhỏ, thêm lúc nào cũng được — làm sau khi xong các entity cốt lõi.*
+- [ ] Xác thực / phân quyền (Spring Security) cho các API admin.
+- [ ] Nhóm 🟡 (gallery ảnh, thông số kỹ thuật, tồn kho/giá riêng) — xem roadmap dưới. Làm SAU khi có entity Category/Brand.
 
 ---
 
@@ -62,8 +86,8 @@ Dự án web bán linh kiện/máy tính (Spring Boot + MySQL). File này ghi l�
 **🔴 Ưu tiên cao**
 - [x] Phân trang + sắp xếp + lọc: `GET /products/search-filter?page=&size=&sort=&minPrice=&maxPrice=&brandId=&categoryId=&inStock=` — `ProductFilter` + `ProductSpecification` + `Pageable`, repo `extends JpaSpecificationExecutor`. Trả `Page<ProductResponse>`. Đã bật `@EnableSpringDataWebSupport(VIA_DTO)` cho JSON phân trang ổn định. (verify OK: 42 sản phẩm, 5 trang)
 - [x] `GET /products/slug/{slug}` — lấy sản phẩm theo slug (repo `findBySlugAndDeletedAtIsNull` + service `getBySlug`). Verify OK bằng PowerShell. *Lưu ý khi test Postman: coi chừng ký tự `%0A` (Enter thừa) dính vào cuối URL → 500 không tìm thấy.*
-- [ ] `POST /products/{id}/restore` — khôi phục hàng đã xóa mềm (`deletedAt = null`). ⏳ **Làm tiếp sáng 2026-10-26.** (dùng `findById` gốc, KHÔNG dùng `getEntityById` vì nó lọc mất hàng đã xóa; nhớ check `if deletedAt == null` để chặn restore hàng đang sống)
-- [ ] `GET /products/trash` — xem danh sách hàng đã xóa mềm (admin), repo `findByDeletedAtIsNotNull`. ⏳ **Làm tiếp sáng 2026-10-26.** (test với data `TEST-DEL-*`: id 66/67/68 đang trong thùng rác)
+- [x] `POST /products/{id}/restore` — khôi phục hàng đã xóa mềm (`deletedAt = null`). Dùng `findById` gốc (không phải `getEntityById`), có check `if deletedAt == null` chặn restore hàng đang sống. Verify OK bằng PowerShell.
+- [x] `GET /products/trash` — danh sách hàng đã xóa mềm (admin), repo `findByDeletedAtIsNotNull`. Verify OK (kịch bản trash → restore → trash). *Bug đã gặp & sửa: khai báo `@GetMapping("/Trash")` T hoa → gọi `/trash` t thường không khớp, rơi nhầm vào `/{id}` → 400. URL phân biệt hoa-thường, luôn viết thường.*
 
 **🟡 Ưu tiên vừa**
 - [ ] Gallery nhiều ảnh: `POST /products/{id}/images`, `DELETE /products/{id}/images/{imageId}` (bảng `product_images`)

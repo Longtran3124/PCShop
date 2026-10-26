@@ -6,6 +6,7 @@ import com.example.springboot.entity.Product;
 
 public class ProductMapper {
     // Request (Tạo mới) -> Entity
+    // vào -> Nhận DTO khách gửi, dựng Entity để lưu DB
     public static Product toEntity(ProductCreateRequest req) {
         Product p = new Product();
         p.setSku(req.getSku());
@@ -24,6 +25,7 @@ public class ProductMapper {
     }
 
     // Entity -> response (trả ra)
+    // ra -> lấy Entity từ DB, dựng DTO trả khách
     public static ProductResponse toResponse(Product p) {
         return ProductResponse.builder()
                 .id(p.getId())

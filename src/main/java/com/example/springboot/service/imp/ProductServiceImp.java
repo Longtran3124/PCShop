@@ -128,6 +128,25 @@ public class ProductServiceImp implements ProductService {
         return ProductMapper.toResponse(p);
     }
 
+    @Override
+    public ProductResponse restore(Long id) {
+        // Dùng findById GỐC (không lọc deleted) vì getEntityById lọc deletedAt IS NULL
+        // -> không bao giờ thấy hàng đã xóa. Restore cần "nhìn xuyên" bộ lọc đó.
+        Product p = productRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm với id: " + id));
+        if (p.getDeletedAt() == null) {
+            throw new RuntimeException("Sản phẩm chưa bị xóa, không cần khôi phục");
+        }
+        p.setDeletedAt(null); // bỏ dấu xóa -> sống lại
+        return ProductMapper.toResponse(productRepository.save(p));
+    }
+
+    @Override
+    public List<ProductResponse> findTrash() {
+        return productRepository.findByDeletedAtIsNotNull()
+                .stream().map(ProductMapper::toResponse).toList();
+    }
+
     private String generateSlug(String name) {
         return name.trim().toLowerCase().replaceAll("\\s+", "-");
     }

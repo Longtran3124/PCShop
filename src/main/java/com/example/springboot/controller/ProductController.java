@@ -114,4 +114,18 @@ public class ProductController {
     public ResponseEntity<ProductResponse> getBySlug(@PathVariable String slug) {
         return ResponseEntity.ok(productService.getBySlug(slug));
     }
+
+    // Khôi phục sản phẩm đã xóa mềm (deletedAt = null). Dùng POST vì có thay đổi dữ liệu.
+    // POST http://localhost:8111/api/products/66/restore
+    @PostMapping("/{id}/restore")
+    public ResponseEntity<ProductResponse> restore(@PathVariable Long id) {
+        return ResponseEntity.ok(productService.restore(id));
+    }
+
+    // Danh sách hàng đã xóa mềm cho ADMIN.
+    // GET http://localhost:8111/api/products/trash
+    @GetMapping("/trash")
+    public ResponseEntity<List<ProductResponse>> getTrash(){
+        return ResponseEntity.ok(productService.findTrash());
+    }
 }

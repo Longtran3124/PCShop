@@ -33,4 +33,11 @@ public interface ProductService {
     Page<ProductResponse> search(ProductFilter filter, Pageable pageable);
 
     ProductResponse getBySlug(String slug);
+
+    // Khôi phục 1 sản phẩm từ thùng rác: đặt deletedAt = null -> hàng sống lại.
+    // Nhận id, trả về ProductResponse của sản phẩm vừa khôi phục.
+    ProductResponse restore(Long id);
+
+    // Lấy danh sách hàng đã xóa mềm cho admin xem/khôi phục.
+    List<ProductResponse> findTrash();
 }

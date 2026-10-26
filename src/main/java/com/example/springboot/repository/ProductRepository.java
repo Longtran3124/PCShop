@@ -16,4 +16,6 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
     List<Product> findByDeletedAtIsNull();
 
     Optional<Product> findBySlugAndDeletedAtIsNull(String slug);
+
+    List<Product> findByDeletedAtIsNotNull();
 }
